@@ -1,0 +1,99 @@
+{
+  "kind": "fixed-task-feasibility-only",
+  "seed": 42,
+  "steps": 16384,
+  "seconds": 6.05,
+  "random": {
+    "success_rate": 0.64,
+    "mean_steps": 108.5,
+    "episodes": 100,
+    "trace": [
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        1,
+        4
+      ]
+    ]
+  },
+  "ppo": {
+    "success_rate": 1.0,
+    "mean_steps": 3.0,
+    "episodes": 100,
+    "trace": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        1,
+        4
+      ]
+    ]
+  },
+  "policy_sha256": "15b046b303e4220d47318995d53b2d85ada52255500ac4e16aae6997c6672db0",
+  "improved": true,
+  "limitation": "One fixed training layout and one seed; not held-out or curriculum evidence."
+}

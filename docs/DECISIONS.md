@@ -53,3 +53,11 @@ Exact runtime/image versions; Feast ordering and same-time revisions; API ledger
 ## New decision format
 
 ID/title; date/status; context/options; decision/tradeoffs; executable verification; affected contracts; superseded entries.
+
+## D012 — Free GitHub Pages demo
+
+Accepted 2026-11-15 from user steering. Publish a static frontend to GitHub Pages using an in-browser SQLite database with labeled mock data. No shared server writes or training jobs are promised on Pages. Local Python PPO and Kafka/Flink/Feast remain the scientific pipeline. This supersedes the prior exclusion of all hosting, but not the exclusion of real robots or paid resources.
+
+## D013 — Milestone delivery
+
+User authorizes a commit, pull request and merge to main at each completed milestone. M0 is split into M0a robot learnability and M0b streaming integration; success of M0a does not complete M0.

@@ -35,4 +35,8 @@ Functional MVP completion requires a learning robot, working feedback loop and s
 
 ## Out of scope
 
-Physical robot control, high-fidelity dynamics, sim-to-real transfer, multi-agent robot coordination, learned curriculum teacher in MVP, cloud deployments and production HA. Large simulator/video payloads do not travel through Kafka.
+Physical robot control, high-fidelity dynamics, sim-to-real transfer, multi-agent robot coordination, learned curriculum teacher in MVP, paid cloud infrastructure and production HA. Large simulator/video payloads do not travel through Kafka.
+
+## Hosted demo addition
+
+GitHub Pages hosts the frontend; browser SQLite supplies labeled mock episodes and scientific report browsing. Pages has no backend execution. Local training results must be distinguishable from seeded mock telemetry.

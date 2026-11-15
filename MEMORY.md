@@ -13,10 +13,13 @@ Updated: 2026-11-15
 ## Current state
 
 - Context migration: complete; initial consumer recommendation specification is superseded.
-- Implementation, trained models and runtime validation: not started.
+- M0a implemented: Gymnasium environment, seven passing tests, PPO fixed-task feasibility at 16,384 steps. See reports/m0a-smoke.json.
+- M0b Kafka/Feast verification remains pending; Docker/Java are not available on the bootstrap host.
+- User authorized milestone commits, PRs and merges. User selected free GitHub Pages hosting and a free database with substantial mock data.
+- Public demo will use browser SQLite; training and distributed streaming remain local. Mock data must be labeled.
 - Active implementation task/owner/branch: none.
-- Next: M0 environment learnability, dependency compatibility, and Feast ordering spikes.
-- Runtime versions and actual hardware capacity: unknown until M0.
+- Next: static demo/database milestone and M0b integration prerequisites.
+- Tested Python 3.12, Gymnasium 1.2.3, Stable-Baselines3 2.7.1 and PyTorch 2.9.1 on macOS arm64; requirements.lock records installed dependencies.
 - Performance and learning targets are proposals, not measured outcomes.
 - Defaults: local CPU-capable 2D grid simulation, synthetic telemetry, Python training/serving and Java Flink. No real robot.
 

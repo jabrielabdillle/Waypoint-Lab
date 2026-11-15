@@ -1,10 +1,12 @@
 # Implementation backlog
 
-All tasks TODO. Dependencies are gates; update status here and active claims in MEMORY.md. Scope is simulation plus actual PPO training, not just generated telemetry.
+M0a is complete; remaining tasks are pending. Dependencies are gates; update status here and active claims in MEMORY.md. Scope is simulation plus actual PPO training, not just generated telemetry.
 
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
-| M0 | RL learnability and integration feasibility | none | TODO |
+| M0a | Fixed-task RL learnability | none | DONE |
+| M0b | Kafka/Feast integration feasibility | M0a | TODO |
+| M0 | Combined feasibility gate | M0a, M0b | IN PROGRESS |
 | M1 | Environment, scenario and telemetry contracts | M0 | TODO |
 | M2 | Local platform and durable telemetry | M1 | TODO |
 | M3 | Run-isolated streaming features | M2 | TODO |
