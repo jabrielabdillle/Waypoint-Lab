@@ -1,6 +1,6 @@
 # Implementation backlog
 
-M0a is complete; remaining tasks are pending. Dependencies are gates; update status here and active claims in MEMORY.md. Scope is simulation plus actual PPO training, not just generated telemetry.
+M0a and W1 are complete; remaining tasks are pending. Dependencies are gates; update status here and active claims in MEMORY.md. Scope is simulation plus actual PPO training, not just generated telemetry.
 
 | ID | Deliverable | Depends on | Status |
 |---|---|---|---|
@@ -76,4 +76,4 @@ After M1, M2 and M5 may proceed independently with separate owners if delegation
 
 ## W1 — Free hosted dashboard
 
-Added from user request: static dashboard, browser SQLite with 18,000 labeled mock episodes, measured PPO replay, Playwright production-build checks and Pages workflow. Implementation/tests complete; deployment waits for GitHub identity verification and Pages configuration. Delivered separately from M0b and scientific pipeline milestones.
+Added from user request: static dashboard, browser SQLite with 18,000 labeled mock episodes, measured PPO replay, Playwright production-build checks and Pages workflow. Implementation/tests complete; PR #2 merged and Pages deployment verified (Actions run 43773800553). Design-gate findings remain documented in reports/w1-validation.md. Delivered separately from M0b and scientific pipeline milestones.
