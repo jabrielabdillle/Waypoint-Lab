@@ -1,33 +1,40 @@
-# Real-time recommendation pipeline
+# Adaptive Robotics Training Platform
 
-An agent-ready blueprint for streaming user clicks, plays, and purchases through Kafka and Flink, publishing fresh features through Feast, and serving low-latency model recommendations.
+A real-time curriculum recommendation system for a reinforcement-learning robot in simulated warehouse navigation. Episode results flow through Kafka and Flink into Feast; a low-latency service recommends the robot's next practice scenario.
 
-**Status: planning complete; implementation has not started.** No runnable services or measured performance are included yet.
+**Status: specifications only; implementation has not started.** No trained policy, runnable services, benchmarks, or learning improvements are claimed.
+
+## Two learning loops
+
+- **Robot policy (required RL):** PPO learns navigation actions from observations and rewards in a Gymnasium-compatible simulator.
+- **Curriculum selector:** reads recent performance and chooses practice scenarios between episodes. The MVP uses explicit rules; a learned selector is a later experiment, not a requirement for the robot to use RL.
+
+The robot's action policy runs locally in the simulator. Kafka and the curriculum API are not in its per-action control loop.
 
 ## Start here
 
-Read [AGENTS.md](AGENTS.md), [project memory](MEMORY.md), and the [ordered backlog](docs/BACKLOG.md). The first implementation task is M0: prove the version-compatible integration before building the full stack.
-
-## Intended outcome
-
-A reproducible local demo emits synthetic activity, updates user features, and changes recommendations. Duplicate events, late arrivals, restarts, stale features, and missing users have explicit behavior.
+Read [AGENTS.md](AGENTS.md), [MEMORY.md](MEMORY.md), and [the backlog](docs/BACKLOG.md). Begin with M0 compatibility and learnability spikes.
 
 | Context | Purpose |
 |---|---|
-| [Product requirements](docs/PRODUCT.md) | Scope, assumptions, acceptance criteria |
-| [Architecture](docs/ARCHITECTURE.md) | Components and reliability boundaries |
-| [Contracts](docs/CONTRACTS.md) | Events, features, API, temporal rules |
-| [Model plan](docs/MODEL.md) | Candidates, training, evaluation, fallback |
-| [Backlog](docs/BACKLOG.md) | Dependencies and executable work packages |
-| [Validation](docs/VALIDATION.md) | Correctness, load, recovery, release gates |
-| [Operations](docs/OPERATIONS.md) | Local workflow and incident procedures |
-| [Agent workflow](docs/AGENT_WORKFLOW.md) | Ownership, handoff, integration |
-| [Decisions](docs/DECISIONS.md) | Accepted defaults and unresolved choices |
-| [Sources](docs/SOURCES.md) | Official references and verification notes |
-| [Agent kickoff](prompts/BUILD.md) | Copyable implementation prompt |
+| [Product](docs/PRODUCT.md) | Demo, scope, success targets |
+| [Architecture](docs/ARCHITECTURE.md) | Training and streaming feedback loops |
+| [Contracts](docs/CONTRACTS.md) | Episodes, features, decisions, API |
+| [RL environment](docs/RL_ENVIRONMENT.md) | Observations, actions, rewards, scenarios |
+| [Model and curriculum](docs/MODEL.md) | PPO lifecycle, selection rules, optional extensions |
+| [Experiment protocol](docs/EXPERIMENTS.md) | Fair comparisons and scientific evidence |
+| [Backlog](docs/BACKLOG.md) | Ordered work and completion gates |
+| [Validation](docs/VALIDATION.md) | Correctness, recovery, learning, performance |
+| [Operations](docs/OPERATIONS.md) | Planned commands and recovery |
+| [Agent workflow](docs/AGENT_WORKFLOW.md) | Ownership and handoff |
+| [Decisions](docs/DECISIONS.md) | Rationale and unresolved choices |
+| [Sources](docs/SOURCES.md) | Official technical references |
+| [Build prompt](prompts/BUILD.md) | Implementation kickoff |
 
-## Target stack
+## Target stack and limits
 
-Kafka; Java Flink DataStream job; Python Feast adapter and FastAPI service; Redis online store; Parquet offline feature history; scikit-learn baseline ranker; Docker Compose; Prometheus/Grafana. Versions are deliberately unpinned until M0 validates compatibility.
+Python, Gymnasium, PyTorch, Stable-Baselines3 PPO; Java Flink; Kafka; Feast with Redis; Parquet history; FastAPI; Docker Compose; Prometheus/Grafana. Pin compatible versions in M0.
 
-All data is synthetic by default. Cloud deployment, real user data, and paid resources are outside the initial build. This repository currently has no license grant; choose a license before public distribution.
+The default simulator is a small custom fully observed 2D grid warehouse, not a physical dynamics simulator. MiniGrid is a reference/alternative requiring an explicit decision. Everything is local and simulated. Real robots, cloud spending, production HA, and sim-to-real claims are out of scope.
+
+The existing repository slug, realtime-recommendation-pipeline, is retained. The project has no license grant yet.

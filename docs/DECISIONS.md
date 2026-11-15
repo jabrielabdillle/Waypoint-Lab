@@ -1,43 +1,55 @@
 # Decision log
 
-## D001 — Local-first synthetic MVP
+Updated 2026-11-15. Entries below describe the current scope; superseded decisions remain explicit.
 
-Status: accepted default, 2026-11-15.
-Use Docker Compose and synthetic data to make the system reproducible without cloud access or personal information. Production infrastructure is deferred.
+## D001 — Local simulation MVP
 
-## D002 — Kafka and Flink remain core
+Accepted default; revised for robotics. Use local Docker Compose and a small simulated environment. No physical robot, cloud account or personal data.
 
-Status: accepted from user requirement.
-Use Kafka for durable events and Flink for stateful feature computation. Java DataStream is the default for explicit state/timers; Python is used for Feast, training, and serving. Pin a compatible release set in M0.
+## D002 — Preserve the streaming platform
 
-## D003 — Feast through a Python adapter
+Accepted user requirement. Kafka events, Java Flink features, Feast/Redis retrieval and Python serving remain core. Partition/isolate by experiment run and learner instead of consumer user identity.
 
-Status: proposed; verification required in M0.
-Emit versioned complete snapshots to Kafka and push through Feast's supported interface. This isolates Java streaming from Python integration, but creates an at-least-once boundary requiring replay and ordering tests.
+## D003 — Supported Feast adapter
 
-## D004 — Separate offline snapshot writer
+Proposed pending M0 evidence. Emit full snapshots and push through Feast's supported interface. Verify revision ordering, retry and consumer-fencing behavior before claiming monotonicity. Adapter boundary is at-least-once.
 
-Status: accepted design default.
-Archive Kafka feature snapshots to Parquet with stable identities and availability timestamps. Do not assume every Feast offline provider supports streaming pushes. Use the resulting files for historical features.
+## D004 — Separate history and decision provenance
 
-## D005 — Small learned ranker with popularity fallback
+Accepted default. Archive snapshots to Parquet with first availability. Log exact decision inputs because feature history does not prove what a request observed. Preserve episode, policy and curriculum provenance.
 
-Status: accepted default.
-Score a bounded 1,000-item catalog; use logistic regression before introducing complex retrieval/model-serving infrastructure. Unknown/stale/unavailable features trigger explicit fallback.
+## D005 — Consumer ranker design superseded
 
-## D006 — Performance numbers are proposed targets
+Superseded by D007/D008 at user request. The initial generic catalog/implicit-feedback ranking design is no longer in scope. Do not implement its event contracts or evaluation metrics.
 
-Status: accepted default.
-PRODUCT.md defines a reproducible benchmark profile. No performance claim is valid before actual measurement. Hardware and quality targets may be revised only in an explicit decision with rationale and evidence.
+## D006 — Targets are not outcomes
 
-## Open decisions assigned to M0/M1
+Accepted. Pipeline capacity, robot learnability and curriculum benefit require separate measured evidence. Negative research results must remain visible.
 
-- Exact pinned runtime, connector, image, and dependency versions.
-- Feast provider ordering semantics and revision representation.
-- Timer/clock strategy for provisional windows and idle expiry.
-- Checkpoint cadence that meets freshness under transactional Kafka.
-- Supported local CPU architectures and resource requirements.
+## D007 — Required robot RL
 
-## New decision template
+Accepted scope from user; PPO/Gymnasium/Stable-Baselines3 are implementation defaults pending M0. The robot learns actions; curriculum selection runs between episodes. No Kafka-backed off-policy training of PPO.
 
-ID and title; date; status (proposed/accepted/superseded); context; options; decision; tradeoffs; verification; affected contracts; supersedes.
+## D008 — Transparent curriculum first
+
+Accepted implementation default. Uniform, fixed and adaptive rule curricula are required. A learned bandit/RL teacher is optional after MVP. Required RL is already provided by the robot policy.
+
+## D009 — Small fully observed warehouse
+
+Accepted default. Custom 12x12 grid, fixed-size observation and four actions. This controls local compute and avoids physics/recurrent-policy complexity. MiniGrid is an alternative only after a documented compatibility/design decision.
+
+## D010 — Experimental rigor
+
+Accepted. Disjoint layout splits, equal environment-step budgets, five paired seeds, locked test data and separate evaluation telemetry. Curriculum improvement is a hypothesis; valid negative results can complete the comparison.
+
+## D011 — Preserve repository identity
+
+Accepted default. Retain realtime-recommendation-pipeline URL; README names the Adaptive Robotics Training Platform. No repository rename is required for the scope change.
+
+## M0/M1 open decisions
+
+Exact runtime/image versions; Feast ordering and same-time revisions; API ledger implementation; monotonic wall-clock expiry; difficulty generation constraints; measured CPU training feasibility and checkpoint cadence. Record rationale and evidence before closing.
+
+## New decision format
+
+ID/title; date/status; context/options; decision/tradeoffs; executable verification; affected contracts; superseded entries.

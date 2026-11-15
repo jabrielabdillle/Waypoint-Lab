@@ -1,74 +1,81 @@
-# Contracts
+# Data and API contracts
 
-This document is the initial contract. M1 converts it into executable schemas and fixtures without changing semantics silently.
+M1 turns this specification into executable schemas and fixtures. All timestamps are UTC wall-clock milliseconds; simulator steps are separate integers. JSON messages <=16 KiB. IDs are nonempty strings <=128 characters, versions explicit, numeric metrics finite.
 
-## Event v1
+## Episode summary
 
-Topic: user-events.v1. Kafka key: user_id. JSON UTF-8, maximum 16 KiB.
+Topic robot-episodes.v1; key is a canonical encoding of (run_id, learner_id). One immutable record per completed training or evaluation episode.
 
 ```json
 {
   "schema_version": 1,
   "event_id": "79170b31-f2b2-4c12-88ac-2cb9ef7f37aa",
-  "user_id": "u_00001",
-  "item_id": "i_00042",
-  "event_type": "play",
-  "event_time": "2026-11-15T18:00:00.000Z",
-  "ingested_at": "2026-11-15T18:00:00.100Z",
-  "play_duration_ms": 12000
+  "run_id": "run_001",
+  "learner_id": "robot_001",
+  "episode_id": "ep_001",
+  "episode_index": 1,
+  "split": "train",
+  "scenario_id": "corridor_2_train_001",
+  "bucket_id": "narrow_corridor:2",
+  "registry_version": "warehouse-v1",
+  "environment_version": "grid-v1",
+  "policy_version": "ppo_run001_update000",
+  "policy_versions": ["ppo_run001_update000"],
+  "curriculum_version": "adaptive-rules-v1",
+  "decision_id": "decision_001",
+  "rollout_block_id": "block_001",
+  "seed": 42,
+  "started_at": "2026-11-15T18:00:00.000Z",
+  "ended_at": "2026-11-15T18:00:01.000Z",
+  "ingested_at": "2026-11-15T18:00:01.100Z",
+  "episode_steps": 40,
+  "total_env_steps": 40,
+  "episode_return": 0.6,
+  "collision_count": 0,
+  "success": true,
+  "terminated": true,
+  "truncated": false
 }
 ```
 
-Required: schema_version, event_id (UUID), user_id, item_id, event_type, event_time, ingested_at. Identifiers are nonempty strings <= 128 characters. Types: click, play, purchase. play_duration_ms is a nonnegative integer required for plays and absent otherwise. Purchase amount_minor is a nonnegative integer with a three-letter currency code, required together for purchases and absent otherwise. MVP counts purchases; it does not sum different currencies.
+All fields above are required. policy_version is the version at episode start; policy_versions lists distinct versions used in encounter order if PPO updates occur across rollout boundaries during the episode. event_id is UUID; episode_index strictly increases for a learner within a run; episode_steps in 1..200; collision_count in 0..episode_steps; success/termination/timeout obey RL_ENVIRONMENT.md. ingested_at is assigned by the trusted publisher. Validate registry membership, split, versions, ended_at >= started_at and event time no more than 60 s ahead of ingestion. Unknown/malformed data goes to robot-episodes.dlq.v1 with reason codes. Evaluation records are archived but cannot update curriculum features.
 
-The trusted ingestion boundary assigns ingested_at. Reject unsupported versions, invalid IDs, malformed timestamps, and event_time more than 60 seconds ahead of ingestion time. Category comes from the versioned catalog, not a client field. Unknown items go to DLQ. Reason codes and event_id are sufficient for ordinary logs; raw event payloads belong only in restricted local debug/DLQ storage.
+## Deduplication and temporal behavior
 
-## Event-time and deduplication
+Deduplicate (run_id, learner_id, episode_id) for 48 hours; retry uses the same event_id and payload. Conflicting payloads are quarantined. Do not promise suppression beyond retention. Watermark: ended_at minus 10 s; idle partition timeout 30 s; allow corrections up to 60 s behind watermark, otherwise route robot-episodes.late.v1 for offline analysis only.
 
-- UTC milliseconds throughout. Rolling windows are (as_of - duration, as_of].
-- Deduplicate (user_id, event_id); duplicate IDs must preserve user and payload. Conflicts go to DLQ.
-- Dedup retention: 48 hours, explicitly bounded. No promise for duplicate suppression beyond this horizon.
-- Bounded out-of-order watermark target: 10 seconds; idle partition timeout: 30 seconds.
-- Accept corrections up to 60 seconds behind the watermark. Older events go to user-events.late.v1 for offline repair and do not mutate current online values.
-- Emit provisional snapshots at most once per second per active user, plus expiry updates. Timers remove expired contributions even without new user events.
-- M1 must specify and test how wall-clock ticks advance rolling as_of for inactive keys without pretending watermarks advance during source silence. Use a monotonic per-key as_of and retain event_time filtering.
-- Rebuilds use a separate feature namespace and consumer group. Never replay historical snapshots over the live namespace.
+Rolling event-time interval is (as_of-duration, as_of]. Emit full provisional snapshots at most once/second per key and on necessary expiry. M1 must implement monotonic as_of ticks during source silence, not assume watermarks advance without events. Rebuild/replay goes into a separate namespace.
 
-## Feature snapshot v1
+## Feature snapshot
 
-Topic: user-features.v1. Key: user_id. Full values, never increment operations.
+Topic learner-features.v1. Feast composite entity: run_id, learner_id, bucket_id. Metadata: feature_schema_version, feature_definition_version, registry_version, snapshot_id, as_of, revision, emitted_at, max_episode_index. Ordering is (as_of, revision), with revision increasing for same-as_of corrections. Identity is deterministic for entity/version/as_of/revision.
 
-Required metadata: user_id, feature_schema_version, snapshot_id, as_of, emitted_at, feature_definition_version, catalog_version. snapshot_id is deterministic for a given feature version, key, as_of, and revision. Revisions increase on same-as_of corrections; the adapter compares (as_of, revision). Kafka partition/offset supplies delivery identity, not business time.
+Only training episodes in that run/bucket contribute. Sort by episode_index, not delivery time. Count windows are based on the latest accepted episodes and include multiple recent policy updates intentionally; retain policy-version provenance.
 
-| Feature | Type | Definition |
-|---|---|---|
-| clicks_5m | int64 | Unique clicks in last 5 minutes |
-| plays_1h | int64 | Unique plays in last hour |
-| purchases_24h | int64 | Unique purchases in last 24 hours |
-| play_duration_ms_1h | int64 | Sum of play durations in last hour |
-| category_affinity_1h | fixed float vector length 20 | Per-category weighted count: click 1, play 2, purchase 5; divide by total, all zeros when total is zero |
-| last_event_time | nullable UTC timestamp | Latest accepted activity timestamp |
+| Feature | Definition |
+|---|---|
+| episodes_seen | Unique accepted training episodes in retained run state |
+| n_recent | Count of latest up to 100 episodes |
+| success_rate_100 | Successes / n_recent; null when empty |
+| collision_rate_100 | Sum collisions / sum steps of those episodes; null when empty |
+| mean_return_100 | Mean episode_return over those episodes; null when empty |
+| mean_steps_100 | Mean steps over those episodes; null when empty |
+| learning_progress_100 | Success rate of latest 50 minus preceding 50; null until 100 observations |
+| episodes_5m | Unique completions in rolling five wall-clock minutes |
+| last_episode_at | Latest accepted ended_at; nullable |
 
-Serving freshness uses snapshot as_of and adapter availability, not last_event_time: an inactive user's correctly expired features can still be current. Feature freshness threshold: 30 seconds. Features absent or older than that are missing/stale, not silently fresh zeros. Numerical zeros are valid values for an existing current row.
+Keep latest 100 contributions per bucket plus bounded five-minute state and dedup state. Run state expires after 48 h inactivity; snapshot metadata declares history reset and consumers treat it as cold start. Snapshot heartbeat is distinct from last_episode_at. A fresh heartbeat does not make old performance evidence current.
 
-History records first available_at after the transactional snapshot becomes readable, persisted idempotently; retries must not rewrite it. This is the earliest declared availability boundary for training. If modeling actual serving visibility, also retain online_available_at acknowledgements and use that later timestamp.
+Freshness checks: snapshot as_of <=30 s old and last_episode_at <=10 min old. Missing or stale evidence invokes fallback; n_recent <20 is under-sampled and eligible for exploration. Retain first history_available_at and online_available_at acknowledgements without rewriting them on retry. Log exact retrieved snapshot IDs/values at decisions; never assume history availability equals online visibility.
 
-## Recommendation API v1
+## Curriculum API
 
-GET /v1/recommendations?user_id=u_00001&k=10; k integer 1..50. Valid unknown user returns fallback. Invalid input returns 422. No eligible catalog items returns 200 with empty items. No safe fallback artifact returns 503.
+POST /v1/curriculum/decisions with run_id, learner_id, rollout_block_id, registry_version, request_id (idempotency key). Returns decision_id, curriculum_version, registry_version, mode, bucket_probabilities (nine named buckets, nonnegative finite values summing to 1), feature_snapshot_ids, feature_as_of and fallback_reason.
 
-```json
-{
-  "request_id": "req_001",
-  "user_id": "u_00001",
-  "items": [{"item_id": "i_00042", "score": 0.82}],
-  "model_version": "baseline-v1",
-  "feature_schema_version": 1,
-  "feature_as_of": "2026-11-15T18:00:01.000Z",
-  "fallback_reason": null
-}
-```
+Same request_id and identical payload returns the same durable decision; different payload returns 409. Scope keys by run and learner, retain for 48 h. Invalid input 422, unknown registry 404, no eligible scenarios or durable decision storage unavailable 503. The response specifies training buckets only. The local runner samples layouts with its logged RNG and applies selections only at reset. Evaluation never calls this API.
 
-Fallback reasons: unknown_user, missing_features, stale_features, feature_store_timeout, model_unavailable. Fallback may use null feature_as_of and a popularity artifact model_version. Return unique eligible items, stable tie-break by item_id, and request_id in logs. Set explicit feature retrieval and scoring deadlines within the 100 ms p95 budget; never retry indefinitely on the request path.
+Fallback reasons: unknown_learner, missing_features, stale_features, feature_store_timeout, selector_unavailable. Fallback distribution is uniform across eligible training buckets, with explicit mode=uniform_fallback; feature_as_of may be null. Budget retrieval <=40 ms and rule computation <=10 ms, with bounded overall timeout <=100 ms at the runner. On network failure the runner logs its own fallback decision in the outbox before proceeding.
 
-GET /health/live checks the process. GET /health/ready verifies usable model OR safe fallback plus catalog; Redis degradation is reported separately and does not disable a working fallback. GET /metrics exposes aggregate metrics without user IDs as labels.
+Decision records include request/decision identity, effective feature values and IDs, policy version, selection probabilities, selected scenario per episode, RNG seed/state reference, timing and fallback reason. Store a durable local decision ledger for the single-instance MVP; M0 must validate idempotency across API restart. Export records to curriculum-decisions.v1 for analysis.
+
+Health: /health/live process; /health/ready registry, selector or fallback, and decision ledger; /metrics aggregate operational signals. Never label metrics by run_id, learner_id or episode_id.

@@ -1,54 +1,56 @@
 # Architecture
 
-## Data flow
+## Two distinct loops
 
 ```mermaid
 flowchart LR
-  G[Synthetic generator] --> K[Kafka user-events.v1]
-  K --> F[Flink validation / dedup / aggregates]
-  F --> D[Dead-letter and late-event topics]
-  F --> U[Kafka user-features.v1]
-  U --> A[Python feature adapter]
-  A --> O[Feast / Redis online store]
-  U --> H[Historical snapshot writer]
-  H --> P[Parquet history]
-  P --> T[Training and evaluation]
-  T --> M[Versioned model artifact]
-  O --> S[FastAPI recommendations]
-  M --> S
-  C[Catalog and popularity baseline] --> S
+  E[Warehouse simulator] -->|observations and rewards| P[PPO trainer and local policy]
+  P -->|actions| E
+  E -->|episode summaries via outbox| K[Kafka robot-episodes.v1]
+  K --> F[Flink validate, dedup, aggregate]
+  F --> U[Kafka learner-features.v1]
+  F --> D[DLQ and late topics]
+  U --> A[Ordered Feast adapter]
+  A --> R[Feast / Redis]
+  U --> H[Parquet history writer]
+  R --> C[Curriculum API]
+  S[Versioned scenario registry] --> C
+  C -->|selection at reset| E
+  C --> L[Decision log]
+  H --> V[Experiment analysis]
+  L --> V
+  P --> M[Immutable PPO checkpoints]
+  M --> V
 ```
 
-## Boundaries and choices
+## Training boundary
 
-Kafka partitions user events by user_id. Flink validates, deduplicates, and computes user aggregates. It emits full feature snapshots rather than increment commands. A Python consumer uses the supported Feast push interface; Flink never writes arbitrary Redis keys as a substitute for Feast.
+PPO consumes local on-policy rollout buffers. Kafka stores completed episode summaries, not a replay buffer for PPO updates. Scenario selection occurs at reset, with one selection context frozen per rollout collection block; policy weights change only at normal optimizer boundaries. Use one environment initially; vectorized environments are a gated extension.
 
-Flink checkpointing plus transactional Kafka output is the intended guarantee for the Flink-to-Kafka boundary. Downstream consumers use read_committed. The feature adapter is at-least-once: commit offsets only after successful online writes, preserve per-key ordering, and retry the identical full snapshot after a crash.
+The simulator writes summaries and decision references to a durable bounded outbox. A publisher retries until broker acknowledgement. At capacity, pause before the next episode rather than silently losing evidence. Current action execution does not wait on the curriculum network path; timeout uses local seeded fallback.
 
-M0 must prove stale-update rejection and retry behavior for the selected Feast provider. A read-then-write comparison alone is not an atomic guarantee. Prefer one ordered writer per partition with consumer fencing and provider timestamp enforcement. If the provider cannot prevent stale writes during ownership changes, document and test a supported guarded write design before claiming monotonicity. Do not conceal this behind an in-memory offset cache.
+## Streaming boundary
 
-Offline history is a separate idempotent consumer of feature snapshots. Store event-time cutoff, first availability time, schema version, source partition/offset, and snapshot identity. This avoids assuming that a local Parquet provider supports streaming offline push. Reconcile online and offline consumers using identities and offsets.
+Partition episodes by (run_id, learner_id); group features additionally by scenario family and difficulty bucket. Never aggregate across runs or mix evaluation with training. Flink produces full snapshots, not increments. Stable operator IDs, checkpoints and transactional Kafka output provide the intended Flink-to-Kafka guarantee; consumers read committed transactions.
 
-## Runtime layout to create
+The Feast adapter is at-least-once: push full rows through the supported API, then commit input offsets. M0 must prove replay, same-as_of revision, stale rejection and ownership-change behavior. An in-memory cache or read-then-write check is not an atomic guarantee. Resolve a supported guarded-write strategy if the provider alone cannot enforce ordering.
 
-- infra/: Compose services, health checks, metrics configuration.
-- schemas/: JSON Schema and valid/invalid fixtures.
-- services/generator/: seeded event producer.
-- streaming/: Java Flink job and deterministic tests.
-- feature_repo/: Feast entities, feature views, service definition.
-- services/feature_adapter/: ordered push consumer.
-- services/history_writer/: immutable Parquet snapshots and manifest.
-- services/api/: retrieval, feature assembly, ranker, fallback.
-- training/: temporal joins, fitting, evaluation, artifact export.
-- tests/: contracts, integration, recovery, end-to-end, and load.
-- scripts/: reproducible entry points.
+Archive feature snapshots separately to Parquet with identities, source offsets and first availability. Do not assume the offline provider supports streaming pushes. Record the exact feature values/versions used in each decision because asynchronously available history is not necessarily what a request observed.
 
-## Backpressure and failure handling
+## Planned layout
 
-Bound every queue and retry interval. Transient store failure pauses consumption without committing offsets. Invalid events go to a bounded, monitored DLQ with reason codes. Poison feature snapshots are quarantined with alerting and an explicit offset-resolution procedure; do not silently skip them.
+- simulation/: environment, reward, scenario registry and deterministic tests.
+- training/: PPO runner, rollouts, checkpoints and seeded curricula.
+- evaluation/: frozen suites, analysis and learning-curve reports.
+- schemas/: episodes, decisions, snapshots, registry and API contracts.
+- streaming/: Java Flink features and oracle comparisons.
+- feature_repo/: Feast entities and feature service.
+- services/feature_adapter/, services/history_writer/, services/api/.
+- services/telemetry/: durable outbox publisher and replay generator.
+- infra/, scripts/, tests/: local stack, commands, CI, fault/load checks.
 
-Keep checkpoints on a persistent local volume for the MVP. A local single-node broker and Redis are not production HA. Acknowledged writes lost with a destroyed volume are outside the local restart guarantee.
+## Freshness and failure
 
-## Freshness budget
+Provisional budget: ingress 250 ms, aggregation schedule 1 s, checkpoint visibility 2 s, adapter 750 ms, margin 1 s. Validate rather than promise it. Bounded retries pause consumers on dependency failures. Quarantine invalid records with reason codes and delivery identities. Never reset offsets to latest to hide lag.
 
-Provisional allocation: ingestion 250 ms, aggregation scheduling 1 s, checkpoint/transaction visibility 2 s, adapter 750 ms, remaining 1 s margin. Validate the total in M0/M3. Watermarks determine event-time completeness; they must not force every provisional online update to wait for lateness to expire.
+Persistent local volumes support process restart, not disaster recovery or production HA. Rebuild feature namespaces separately before switching readers. Training checkpoint rollback creates a new run_id with parent lineage, avoiding contamination by results from discarded training.

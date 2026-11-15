@@ -1,73 +1,73 @@
-# Ordered implementation backlog
+# Implementation backlog
 
-All items are TODO. Dependencies are gates. Record actual status in this table and active ownership in MEMORY.md. Each item should be one or several focused PRs, not one giant build.
+All tasks TODO. Dependencies are gates; update status here and active claims in MEMORY.md. Scope is simulation plus actual PPO training, not just generated telemetry.
 
-| ID | Work package | Depends on | Status |
+| ID | Deliverable | Depends on | Status |
 |---|---|---|---|
-| M0 | Compatibility and adapter spike | none | TODO |
-| M1 | Contracts and deterministic oracle | M0 | TODO |
-| M2 | Local infrastructure and generator | M1 | TODO |
-| M3 | Stateful streaming features | M2 | TODO |
-| M4 | Feast bridge and offline history | M3 | TODO |
-| M5 | Baseline training and artifacts | M4 | TODO |
-| M6 | Recommendation API and fallback | M4, M5 | TODO |
-| M7 | Recovery, load, and observability | M6 | TODO |
-| M8 | Reproducible demo and release evidence | M7 | TODO |
+| M0 | RL learnability and integration feasibility | none | TODO |
+| M1 | Environment, scenario and telemetry contracts | M0 | TODO |
+| M2 | Local platform and durable telemetry | M1 | TODO |
+| M3 | Run-isolated streaming features | M2 | TODO |
+| M4 | Feast adapter, history and decision ledger | M3 | TODO |
+| M5 | PPO runner, checkpoints and baseline curricula | M1 | TODO |
+| M6 | Adaptive curriculum API and closed loop | M4, M5 | TODO |
+| M7 | Reliability, observability and load evidence | M6 | TODO |
+| M8 | Full learning comparison and reproducible demo | M7 | TODO |
 
-## M0 — Resolve highest-risk integration
+## M0 — Validate the risky assumptions
 
-Inventory prerequisites. Select a supported Java/Flink/Kafka connector combination and Python/Feast/Redis combination using official docs. Create a minimal Compose spike, pin versions, and record the matrix in docs/DECISIONS.md. Push one registered Feast feature and retrieve it. Test same-snapshot retry, older-after-newer writes, equal timestamp revisions, consumer restart/rebalance, and provider behavior under unavailable Redis.
+Inventory hardware/tools. Pin a supported Python/Gymnasium/PyTorch/Stable-Baselines3 set and Java/Flink/Kafka/Feast/Redis set using official docs. Build a minimal environment and show easiest-task PPO improvement versus random actions within 100k steps. Record results and diagnose failures before expansion.
 
-Exit: reproducible commands plus actual output; a documented implementation for monotonic writes; measured transaction visibility/freshness feasibility. If ordering cannot be guaranteed, resolve the design before M4.
+Separately prove Feast push/read, identical retry, older writes, equal-as_of revisions, consumer ownership changes and Redis outages. Measure transaction visibility. Validate restart-safe local decision idempotency. Exit: reproducible evidence, version matrix and a viable ordering/learnability design.
 
-## M1 — Make the contracts executable
+## M1 — Freeze executable contracts
 
-Create JSON schemas, OpenAPI skeleton, valid/invalid fixtures, catalog schema, impression schema, and a pure batch oracle. Resolve event-time/idle expiry and snapshot revision details. Test exact window boundaries, duplicates, conflicting IDs, late input, expiry, and availability-aware training joins.
+Implement Gymnasium environment checks, reward/termination tests, valid layout generation, nine-bucket registry and split-hash checks. Define difficulty bounds. Create episode/decision/feature JSON schemas and OpenAPI. Build a pure oracle for count windows, time windows, deduplication and corrections.
 
-Exit: contract tests and oracle pass with deterministic fixtures; no ambiguous field types or timing semantics.
+Exit: deterministic fixtures pass, no train/test overlap, no ambiguous temporal or decision semantics.
 
-## M2 — Create the local platform
+## M2 — Platform and event publication
 
-Implement Compose, health checks, topic creation, persistent volumes, generator, and pinned dependency manifests. Start with three user-event partitions. Expose local services on loopback. Add CI for schema/unit checks without secrets.
+Implement Compose health checks, persistent volumes, three episode-topic partitions, local outbox and publisher. Replay generator is explicitly labeled synthetic. Bind ports to loopback and add secret-free CI.
 
-Exit: clean start produces schema-valid seeded events; readiness waits work; restart preserves test data; documented shutdown preserves volumes unless explicitly resetting.
+Exit: clean startup, schema-valid simulated episodes, retry after broker outage without silent loss, and safe stop/restart. Document capacity and dependencies.
 
-## M3 — Stream features
+## M3 — Streaming features
 
-Implement Java Flink job with stable operator IDs, checkpointing, transactional output, deduplication, late/DLQ routes, bounded state, and periodic expiry. Set checkpoint cadence from M0 evidence.
+Implement bounded dedup, latest-100 episode statistics, rolling-five-minute counts, correction routing, silence/expiry handling, stable operator IDs, checkpoints and Kafka transactions.
 
-Exit: Flink snapshots match oracle on all edge fixtures; restore/replay does not double-count within retention; inactive users expire correctly; lag and checkpoint metrics exist.
+Exit: oracle parity, duplicate and restore correctness, no cross-run or evaluation contamination, bounded state and metrics.
 
-## M4 — Publish and archive features
+## M4 — Store and serve feature context
 
-Implement ordered adapter, registered Feast feature service, Redis lookup, idempotent history writer, manifests and availability timestamps. Add source-offset reconciliation and retry tests.
+Register Feast composite entities and views. Implement ordered push consumer, idempotent Parquet history and availability records. Implement durable single-instance decision ledger and export.
 
-Exit: push/read and training-history round trip pass; crash before/after push or offset commit is safe; stale write and rebalance tests pass; duplicate history records do not change first availability.
+Exit: push/read and historical round trips; crash/rebalance/stale-write tests; first-availability preservation; repeated request IDs stable after restart.
 
-## M5 — Train and export baseline
+## M5 — Required PPO learning system
 
-Implement impression generator, temporal joins/splits, popularity baseline, learned ranker, immutable artifacts, and evaluation report per MODEL.md.
+Implement trainer from MODEL.md, isolated RNGs, environment-step budget enforcement, uniform/fixed curricula, immutable checkpoint metadata and resumed-run lineage. Implement evaluation that cannot change training state.
 
-Exit: reproducible fit/evaluate/export; leakage tests pass; measured quality comparison and promotion decision recorded.
+Exit: genuine learned policy beats random actions on a held-out smoke suite with results labeled preliminary; checkpoint load and isolation tests pass. Full statistical evidence remains M8.
 
-## M6 — Serve recommendations
+## M6 — Close the curriculum loop
 
-Implement request validation, bounded vectorized scoring, feature retrieval, eligibility filtering, deadlines, readiness, model loading, and fallback. Log request/trace IDs with no personal data.
+Implement adaptive rules, retrieval deadlines, fallback distribution, idempotent API, decision provenance and block-frozen selection at resets. Wire actual PPO episodes through Kafka/Flink/Feast.
 
-Exit: API contract tests pass; unknown/stale/missing/offline-store/model failures behave as specified; healthy path uses fresh features and trained artifact.
+Exit: performance changes alter eligible selection probabilities; no mid-episode switches; all probabilities valid; outages trigger logged fallback; actual rollout/feature/decision chain is traceable.
 
-## M7 — Prove reliability and performance
+## M7 — Reliability and capacity
 
-Implement metrics/dashboards and VALIDATION.md scenarios. Run simultaneous load and controlled process failures. Persist machine configuration and raw benchmark summaries.
+Run VALIDATION.md fault scenarios and simultaneous pipeline load. Add dashboards for feature freshness, lag, fallback, collisions, success and training throughput without unbounded metric labels.
 
-Exit: targets met or explicitly reported as unmet; no silent relaxation; no duplicate aggregation or stale rollback; recovery procedures rehearsed.
+Exit: measured operational targets or explicit failures; restored values match oracle; no stale rollback; documented recovery rehearsed.
 
-## M8 — Deliver the reproducible demo
+## M8 — Experiments and final demo
 
-Implement documented command surface from OPERATIONS.md, fresh-environment setup, end-to-end demo, architectural diagram, final limitations and evidence index.
+Run the frozen five-seed, three-curriculum experiment in EXPERIMENTS.md. Produce learning curves, uncertainty, censored-run reporting and final test results. Implement all documented commands and repeat clean-start demo.
 
-Exit: a second clean run reproduces outcomes; all preceding gates pass; no claimed result lacks an artifact; MEMORY.md accurately describes completion and next production gaps.
+Exit: functional gates pass, robot learning evidenced, curriculum comparison complete even if the benefit hypothesis fails, README and memory reflect actual results. Do not label a smoke run as the full experiment.
 
-## Parallelism after gates
+## Parallel work
 
-After M1, infrastructure and pure streaming logic can be developed independently behind shared fixtures. After M3, the adapter and history writer can be separate tasks. During M5, API scaffolding may proceed against contract fixtures, but M6 completion waits for real artifacts. One coordinator integrates and edits shared contracts.
+After M1, M2 and M5 may proceed independently with separate owners if delegation is authorized. The coordinator owns shared schemas. M6 completion requires both the real feature path and actual PPO runner; mocks cannot satisfy its gate.

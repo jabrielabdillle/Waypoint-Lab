@@ -1,34 +1,38 @@
 # Product requirements
 
-## Working backwards from the demo
+## End-state demo
 
-A developer starts the stack, seeds a catalog, requests recommendations for a new user, streams activity for that user, and observes changed scores driven by fresh features. The same demo proves that duplicate input does not inflate aggregates and that serving remains useful when the feature store is unavailable.
+A simulated robot learns warehouse navigation with PPO. After a block of episodes, its collision and success statistics reach Feast through Kafka/Flink. The curriculum service selects further practice, balancing weaknesses, exploration and skill retention. The next resets use those scenarios. A developer can inspect learning curves, decisions and feature versions.
 
-## MVP scope
+The demo includes an actual trained policy and actual simulator episodes. Synthetic replay is reserved for infrastructure stress tests.
 
-- Synthetic catalog of 1,000 items across 20 categories and 10,000 synthetic users.
-- Click, play, and purchase events with deterministic generation.
-- Kafka ingestion, stateful Flink aggregation, versioned feature updates, Feast online retrieval.
-- Deterministic popularity fallback and a trained baseline ranker.
-- Historical feature snapshots, leakage-safe training, evaluation, API, metrics, and recovery tests.
-- One-command workflow after prerequisites are installed.
+## Required MVP
 
-## Proposed acceptance targets
+- Fully observed 2D warehouse navigation with three scenario families and three difficulty levels.
+- Gymnasium environment, local PPO trainer, checkpoints and evaluation harness.
+- Episode-summary events, Kafka/Flink feature computation, Feast retrieval and Parquet history.
+- Versioned rule-based adaptive curriculum, random curriculum and fixed curriculum.
+- Bounded-latency selection API; fallback to a seeded eligible uniform distribution.
+- Decision provenance, training-run isolation, learning curves, recovery tests and operational metrics.
+- Reproducible local workflow without paid services.
 
-These are design targets to validate, not guarantees or measured results.
+## Proposed targets, not results
 
-| Signal | Target | Measurement |
+| Signal | Target | Evidence |
 |---|---|---|
-| Recommendation latency | p95 <= 100 ms, p99 <= 200 ms | 100 requests/s, concurrency cap 32, 10-minute steady run after 2-minute warmup |
-| Event acceptance to visible feature | p95 <= 5 seconds | Ingestion receipt to successful online read, including checkpoint visibility |
-| Ingestion | 1,000 events/s for 10 minutes | Fixed seeded workload, report loss, lag, CPU and memory |
-| API success | >= 99.9% | Valid requests, include successful fallback responses, report fallback separately |
-| Restart recovery | <= 60 seconds | Inject one Flink worker failure; compare recovered values against oracle |
-| Correctness | Exact integer aggregates on deterministic fixture | Duplicates, out-of-order events, expiry, replay, and boundary cases |
-| Recommendation quality | Beat popularity on held-out NDCG@10 | Report bootstrap interval; synthetic result demonstrates mechanics only |
+| Curriculum API latency | p95 <=100 ms, p99 <=200 ms | 100 requests/s, concurrency <=32, 2-minute warmup plus 10-minute run |
+| Feature visibility | p95 <=5 seconds after ingestion | Includes Flink transaction visibility and adapter |
+| Replay ingestion capacity | 1,000 episode summaries/s for 10 minutes | Synthetic stress fixture; not claimed simulator throughput |
+| API success | >=99.9% of valid requests | Report fallback separately |
+| Stream restart recovery | <=60 seconds | Worker failure and oracle comparison |
+| Stream correctness | Exact counts and rates within 1e-6 | Duplicate, late, expiry, restart, run-isolation fixtures |
+| Robot learns | Beats random actions on held-out navigation | Equal evaluation protocol and seed-level uncertainty |
+| Curriculum research goal | >=20% fewer training steps to 80% validation success versus uniform curriculum | Fixed suite and budgets in EXPERIMENTS.md; unmet/censored runs reported |
 
-Run ingestion and serving load concurrently on a documented reference machine with at least 8 logical CPUs and 16 GiB available memory. If hardware is insufficient, report results as capacity-limited and propose revised targets; never quietly relax criteria.
+Run pipeline load concurrently on a documented reference machine with at least 8 logical CPUs and 16 GiB available memory. Measure RL training separately so simulated throughput is not confused with Kafka capacity. CPU-first is a target; document actual training duration.
 
-## Non-goals
+Functional MVP completion requires a learning robot, working feedback loop and scientifically valid comparison. A positive curriculum effect is a research goal, not something agents may fabricate or make a prerequisite for reporting a completed experiment.
 
-Production HA, billing, real personal data, online experiments, automatic retraining/promotion, cloud deployment, large-scale candidate search, and causal business-lift claims. A launch beyond the local MVP requires a separate readiness review.
+## Out of scope
+
+Physical robot control, high-fidelity dynamics, sim-to-real transfer, multi-agent robot coordination, learned curriculum teacher in MVP, cloud deployments and production HA. Large simulator/video payloads do not travel through Kafka.

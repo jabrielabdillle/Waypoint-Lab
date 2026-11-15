@@ -1,33 +1,39 @@
 # Validation strategy
 
-## Required evidence
+## Evidence requirements
 
-Record commit, exact command, runtime versions, dataset seed, workload size, machine resources, start/end UTC, pass/fail, and artifact path. CI checks are required once executable code exists. Planning documents themselves are not test evidence.
+Every result records commit, exact command, versions, seeds, machine resources, config/registry hashes, run IDs, elapsed time, pass/fail and artifact locations. Planning documents are not runtime evidence.
 
 ## Test layers
 
-- Unit: aggregate math, time boundaries, dedup TTL, affinity normalization, candidate filtering, feature ordering, fallback selection.
-- Contract: JSON schemas, API responses, feature names/types, backward-compatible optional fields, unknown version rejection.
-- Integration: Kafka -> Flink -> Kafka -> Feast -> Redis -> API; Kafka -> history -> training.
-- Temporal correctness: late corrections, idle expiry, future timestamps, equal-time revisions, training cutoff and availability joins.
-- Fault injection: kill/restart Flink, adapter crash around offset commit, rebalance, Redis outage, Kafka outage, malformed event, corrupted model, checkpoint restore.
-- Performance: concurrent ingestion and recommendation workload from PRODUCT.md. Record distributions, error counts, fallback rates, queue growth, state size, and resource saturation.
+- Environment: correct observations/actions, valid paths, deterministic reset, reward math, collision counting, termination versus timeout.
+- RL: finite updates, observation compatibility, checkpoint metadata, budget enforcement, RNG isolation, no Kafka replay as PPO experience.
+- Curriculum: normalized probabilities, eligibility, under-sampled exploration, reset-only application and block freezing.
+- Streaming: duplicates, conflicts, latest-100 ordering, rolling boundaries, out-of-order corrections, idle expiry, run isolation.
+- Store/API: ordered writes, retries, revisions, decision idempotency, exact feature provenance, fallback deadlines.
+- Scientific evaluation: locked splits, no evaluation-fed features, equal step budgets, matched seeds, correct censoring and seed-level statistics.
+- Infrastructure: consumer/worker crashes, Redis/Kafka outages, poisoned records, corrupt artifacts and load.
 
-## Deterministic acceptance scenarios
+## Required acceptance scenarios
 
-1. Seed catalog and unknown user; API returns stable eligible popularity recommendations.
-2. Emit category-focused events; online values match oracle and ranker scores change. Assert scores/features, not a brittle requirement that one item always becomes first.
-3. Re-send identical events; counts do not increase.
-4. Submit permitted out-of-order input; correction appears without rollback by an older snapshot.
-5. Advance time without user input; rolling values expire.
-6. Submit beyond-lateness input; late topic receives it and current values remain unchanged.
-7. Crash and restore within retained input; output equals uninterrupted oracle.
-8. Crash adapter after write before commit; retry preserves values and history availability.
-9. Disable Redis; API returns bounded-latency fallback and emits degradation metrics.
-10. Supply an incompatible model; retain last good artifact or safe fallback.
-11. Inject future-only feature rows; training join excludes them.
-12. Fresh-environment demo completes using documented commands only.
+1. A reset produces a valid reproducible layout; hand-computed actions produce expected reward and success.
+2. Collision leaves position fixed; the 200-step cap truncates without masquerading as success.
+3. PPO learns the easiest task beyond random actions; report actual seed/budget.
+4. Uniform, fixed and adaptive curricula run with the same robot and reward.
+5. Repeated episode telemetry does not inflate statistics; conflicting payload is quarantined.
+6. Late/permitted corrections agree with oracle; older data goes to late topic.
+7. Separate runs with identical learner IDs remain isolated; evaluation records cannot affect selection.
+8. Latest-100 metrics use episode_index rather than arrival order; time-window expiry works during silence.
+9. Feature adapter crash before/after write/offset commit preserves monotonic values.
+10. Repeated decision requests survive API restart; payload conflict returns 409.
+11. Redis/API outage leads to logged eligible uniform fallback, with no per-action network stall.
+12. A scenario recommendation takes effect only at reset; an episode spanning a PPO block retains provenance.
+13. Restoring an older checkpoint creates new run lineage rather than blending statistics.
+14. Evaluation changes no training weights, normalizers, feature rows or curriculum decisions.
+15. Synthetic load remains in its own namespace and is excluded from learning curves.
+16. The full experiment reports non-attainment and negative results honestly.
+17. Clean-environment setup and actual trained-policy demo reproduce documented outcomes.
 
-## Release gate
+## Performance and release
 
-M0..M8 criteria must pass for an MVP-complete claim. Publish unresolved limitations and failed targets alongside successful results. Keep raw large outputs ignored; commit small redacted reports and reproducible scripts. Production readiness is separate from MVP completeness.
+Use PRODUCT.md for pipeline load and EXPERIMENTS.md for RL budgets; do not conflate the two. Keep per-seed learning results distinct from aggregate API latency. Functional MVP requires M0..M8 deliverables and scientific integrity, not a forced positive adaptive-curriculum result. Operational target failures remain visible and prevent claiming those targets met. Production readiness is not implied.

@@ -1,9 +1,11 @@
-# Implementation kickoff
+# Autonomous build kickoff
 
-Use this prompt with an autonomous coding agent in a checkout of this repository:
-
-> Read AGENTS.md and MEMORY.md, then the required architecture and contract documents. Implement the first unblocked task in docs/BACKLOG.md, starting with M0 if no implementation exists. Validate assumptions against official versioned documentation and executable evidence. Make reversible local decisions autonomously; stay within the local synthetic-data scope. Keep work small, test it, and update memory, backlog, and decisions with exact outcomes. Do not claim tests ran when they did not. If multiple agents are authorized, assign disjoint ready work with explicit ownership and integrate through the coordinator. Continue to the next ready milestone while authorized; stop only for a concrete blocker or completed scope. End each session with a precise handoff and the next executable action.
+> Read AGENTS.md and MEMORY.md, then product, architecture, contracts, RL environment, model and experiment specifications. Build the Adaptive Robotics Training Platform starting with the first unblocked backlog item. Required reinforcement learning is a real PPO navigation policy; do not substitute scripted telemetry. Start with bounded learnability and compatibility spikes. Keep action inference local and curriculum selection at resets. Implement reversible local work autonomously within simulation scope. Pin verified versions, test meaningful behavior, record exact commands/seeds/budgets/results, and update memory, decisions and backlog. If delegation is authorized, assign disjoint ready tasks. Continue through authorized ready work; stop for concrete blockers or completed scope. End with a precise handoff. Never invent benchmark or learning results.
 
 ## Review prompt
 
-> Review the implementation against PRODUCT.md, CONTRACTS.md, and VALIDATION.md. Focus on replay, late data, idle expiry, monotonic feature writes, offline availability timestamps, training leakage, safe fallback, and reproducible latency evidence. Report actionable findings with file references. Distinguish unimplemented scope from regressions and verify fixes with meaningful tests.
+> Review against PRODUCT.md, CONTRACTS.md, RL_ENVIRONMENT.md, MODEL.md, EXPERIMENTS.md and VALIDATION.md. Check terminated/truncated semantics, on-policy rollout integrity, episode-boundary selection, run/test isolation, checkpoint lineage, feature ordering/replay, decision idempotency, fallback, equal training budgets and honest statistics. Distinguish a functional demonstration from full experimental evidence. Report actionable findings with file references.
+
+## Experiment prompt
+
+> Run the frozen experiment configuration only after prerequisite gates pass. Keep methods, seeds, step budgets and registry identical across arms. Preserve censored runs and negative results; never tune on test outcomes. Produce a reproducible report separating RL learning, curriculum benefit and pipeline performance. If available resources cannot complete the full protocol, report the exact completed subset and remaining work without labeling it complete.

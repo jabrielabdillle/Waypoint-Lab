@@ -1,3 +1,4 @@
+# Credentials and local environments
 .env
 .env.*
 !.env.example
@@ -11,8 +12,14 @@ target/
 build/
 dist/
 node_modules/
+# Generated RL, simulation and streaming outputs
 artifacts/
 data/
 checkpoints/
+runs/
+tensorboard/
+wandb/
+videos/
+rollouts/
 *.log
 .DS_Store
