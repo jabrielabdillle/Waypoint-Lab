@@ -2,7 +2,7 @@
 
 A real-time curriculum recommendation system for a reinforcement-learning robot in simulated warehouse navigation. Episode results flow through Kafka and Flink into Feast; a low-latency service recommends the robot's next practice scenario.
 
-**Status: specifications only; implementation has not started.** No trained policy, runnable services, benchmarks, or learning improvements are claimed.
+**Status: M0a complete.** A tested Gymnasium environment and bounded PPO feasibility runner are implemented. The fixed-task report is in [reports/m0a-smoke.json](reports/m0a-smoke.json); generalization, curriculum benefit and the streaming stack are not yet validated.
 
 ## Two learning loops
 
@@ -35,6 +35,17 @@ Read [AGENTS.md](AGENTS.md), [MEMORY.md](MEMORY.md), and [the backlog](docs/BACK
 
 Python, Gymnasium, PyTorch, Stable-Baselines3 PPO; Java Flink; Kafka; Feast with Redis; Parquet history; FastAPI; Docker Compose; Prometheus/Grafana. Pin compatible versions in M0.
 
-The default simulator is a small custom fully observed 2D grid warehouse, not a physical dynamics simulator. MiniGrid is a reference/alternative requiring an explicit decision. Everything is local and simulated. Real robots, cloud spending, production HA, and sim-to-real claims are out of scope.
+The default simulator is a small custom fully observed 2D grid warehouse, not a physical dynamics simulator. MiniGrid is a reference/alternative requiring an explicit decision. Training and streaming are local and simulated. A free GitHub Pages frontend with browser SQLite mock data is in scope. Real robots, paid hosting, production HA, and sim-to-real claims are out of scope.
 
 The existing repository slug, realtime-recommendation-pipeline, is retained. The project has no license grant yet.
+
+## Run the implemented milestone
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.lock
+.venv/bin/python -m pytest -q
+.venv/bin/python -m training.smoke --steps 16384 --output artifacts/my-smoke
+```
+
+Use a new artifact directory for every run. The smoke task is intentionally fixed and is not held-out evaluation.
