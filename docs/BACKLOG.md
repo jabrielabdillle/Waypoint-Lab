@@ -73,3 +73,7 @@ Exit: functional gates pass, robot learning evidenced, curriculum comparison com
 ## Parallel work
 
 After M1, M2 and M5 may proceed independently with separate owners if delegation is authorized. The coordinator owns shared schemas. M6 completion requires both the real feature path and actual PPO runner; mocks cannot satisfy its gate.
+
+## W1 — Free hosted dashboard
+
+Added from user request: static dashboard, browser SQLite with 18,000 labeled mock episodes, measured PPO replay, Playwright production-build checks and Pages workflow. Implementation/tests complete; deployment waits for GitHub identity verification and Pages configuration. Delivered separately from M0b and scientific pipeline milestones.

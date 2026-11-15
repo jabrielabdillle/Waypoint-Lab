@@ -23,3 +23,8 @@ videos/
 rollouts/
 *.log
 .DS_Store
+
+# Browser and local design-check outputs
+.taste-skill/
+test-results/
+playwright-report/

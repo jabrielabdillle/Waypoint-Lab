@@ -4,7 +4,7 @@
 
 Build the Adaptive Robotics Training Platform specified in README.md. The user selected robotics curriculum recommendation and explicitly added reinforcement learning. Implement an actual PPO-trained navigation policy; scripted episode telemetry alone cannot satisfy the project.
 
-Treat specifications as intended behavior, not evidence of implementation. Reversible local implementation and tests are in scope. Paid resources, real robot control, credentials, and destructive operations require separate authorization. Free GitHub Pages deployment is authorized, as are milestone PRs and merges. Repository visibility changes require explicit confirmation.
+Treat specifications as intended behavior, not evidence of implementation. Reversible local implementation and tests are in scope. Paid resources, real robot control, credentials, and destructive operations require separate authorization. Free GitHub Pages deployment is authorized, as are milestone PRs and merges. The user explicitly authorized making this repository public for GitHub Pages.
 
 ## Read order
 

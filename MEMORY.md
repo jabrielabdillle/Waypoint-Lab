@@ -7,7 +7,7 @@ Updated: 2026-11-15
 - User first requested autonomous-agent project context and a GitHub repository for a Kafka/Flink/Feast recommendation pipeline.
 - User then selected robotics simulation curriculum and explicitly requested reinforcement learning plus updates to all context files.
 - Current project: Adaptive Robotics Training Platform.
-- Repository: https://github.com/jabrielabdillle/realtime-recommendation-pipeline (private; slug retained).
+- Repository: https://github.com/jabrielabdillle/realtime-recommendation-pipeline (public visibility authorized; slug retained).
 - Required RL: PPO robot navigation policy. Initial curriculum selector: performance-based rules, with random and fixed baselines. Learned teacher is optional.
 
 ## Current state
@@ -18,7 +18,10 @@ Updated: 2026-11-15
 - User authorized milestone commits, PRs and merges. User selected free GitHub Pages hosting and a free database with substantial mock data.
 - Public demo will use browser SQLite; training and distributed streaming remain local. Mock data must be labeled.
 - Active implementation task/owner/branch: none.
-- Next: static demo/database milestone and M0b integration prerequisites.
+- W1 dashboard implemented and tested: 18,000 mock SQLite episodes, measured PPO replay, seven passing production-build Playwright checks.
+- M0a merged via PR #1.
+- Public visibility change is waiting for GitHub email identity verification; user has explicitly authorized it.
+- Next: merge W1 PR, enable GitHub Actions Pages, verify live site, then resolve M0b runtime prerequisites.
 - Tested Python 3.12, Gymnasium 1.2.3, Stable-Baselines3 2.7.1 and PyTorch 2.9.1 on macOS arm64; requirements.lock records installed dependencies.
 - Performance and learning targets are proposals, not measured outcomes.
 - Defaults: local CPU-capable 2D grid simulation, synthetic telemetry, Python training/serving and Java Flink. No real robot.
