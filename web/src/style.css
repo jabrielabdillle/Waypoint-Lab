@@ -8,3 +8,5 @@
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.button:hover,.button:active,.icon-button:active{transform:none}}
 
 .nav-item{white-space:nowrap}
+
+.slash{color:#aaa296}select{height:44px}.brand{min-height:44px}
