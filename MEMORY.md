@@ -16,12 +16,15 @@ Updated: 2026-11-15
 - M0a implemented: Gymnasium environment, seven passing tests, PPO fixed-task feasibility at 16,384 steps. See reports/m0a-smoke.json.
 - M0b Kafka/Feast verification remains pending; Docker/Java are not available on the bootstrap host.
 - User authorized milestone commits, PRs and merges. User selected free GitHub Pages hosting and a free database with substantial mock data.
-- Public demo will use browser SQLite; training and distributed streaming remain local. Mock data must be labeled.
+- Public demo uses browser SQLite; training and distributed streaming remain local. Mock data must be labeled.
 - Active implementation task/owner/branch: none.
 - W1 dashboard implemented and tested: 18,000 mock SQLite episodes, measured PPO replay, seven passing production-build Playwright checks.
 - M0a merged via PR #1.
-- Public visibility change is waiting for GitHub email identity verification; user has explicitly authorized it.
-- Next: merge W1 PR, enable GitHub Actions Pages, verify live site, then resolve M0b runtime prerequisites.
+- Repository is public. W1 merged via PR #2; GitHub Actions Pages deployment succeeded (run 43773800553).
+- Live URL: https://jabrielabdillle.github.io/realtime-recommendation-pipeline/
+- Live browser verification: 18,000 records loaded; Adaptive filter returns 6,000 across five runs.
+- Next: resolve M0b runtime prerequisites and implement the streaming reliability proof.
+- Taste design gate remains FAIL 47; report records findings and dashboard applicability. Functional CI passed.
 - Tested Python 3.12, Gymnasium 1.2.3, Stable-Baselines3 2.7.1 and PyTorch 2.9.1 on macOS arm64; requirements.lock records installed dependencies.
 - Performance and learning targets are proposals, not measured outcomes.
 - Defaults: local CPU-capable 2D grid simulation, synthetic telemetry, Python training/serving and Java Flink. No real robot.

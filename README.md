@@ -52,4 +52,4 @@ Use a new artifact directory for every run. The smoke task is intentionally fixe
 
 ## Dashboard
 
-The `web/` app provides browser SQLite with 18,000 labeled mock episodes, curriculum/scenario filters, episode details, CSV/SQLite export, research notes and the measured fixed-task PPO replay. Run `npm ci` then `npm test` in `web/`; see [deployment instructions](docs/DEPLOYMENT.md). GitHub Pages publication must be verified before treating the expected URL as live.
+The `web/` app provides browser SQLite with 18,000 labeled mock episodes, curriculum/scenario filters, episode details, CSV/SQLite export, research notes and the measured fixed-task PPO replay. Run `npm ci` then `npm test` in `web/`; see [deployment instructions](docs/DEPLOYMENT.md). [Open the live dashboard](https://jabrielabdillle.github.io/realtime-recommendation-pipeline/). Deployment and live filtering were verified on 2026-11-15.
